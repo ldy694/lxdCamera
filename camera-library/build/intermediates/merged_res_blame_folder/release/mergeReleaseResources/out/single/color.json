@@ -1,0 +1,90 @@
+[
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_btn_colored_text_material.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_btn_colored_text_material.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_tint_btn_checkable.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_tint_btn_checkable.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_hint_foreground_material_dark.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_hint_foreground_material_dark.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/switch_thumb_material_light.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/switch_thumb_material_light.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_tint_default.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_tint_default.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_secondary_text_material_light.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_secondary_text_material_light.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_tint_seek_thumb.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_tint_seek_thumb.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_search_url_text.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_search_url_text.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/vector_tint_color.xml",
+        "source": "com.lxd.camera.library.camera-library-ui-45:/color/vector_tint_color.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_primary_text_disable_only_material_light.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_primary_text_disable_only_material_light.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_secondary_text_material_dark.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_secondary_text_material_dark.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_primary_text_material_light.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_primary_text_material_light.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/vector_tint_theme_color.xml",
+        "source": "com.lxd.camera.library.camera-library-ui-45:/color/vector_tint_theme_color.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/switch_thumb_material_dark.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/switch_thumb_material_dark.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_primary_text_material_dark.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_primary_text_material_dark.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_primary_text_disable_only_material_dark.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_primary_text_disable_only_material_dark.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_tint_switch_track.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_tint_switch_track.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_tint_spinner.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_tint_spinner.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_tint_edittext.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_tint_edittext.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_hint_foreground_material_light.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_hint_foreground_material_light.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_background_cache_hint_selector_material_light.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_background_cache_hint_selector_material_light.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/color/abc_background_cache_hint_selector_material_dark.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/color/abc_background_cache_hint_selector_material_dark.xml"
+    }
+]

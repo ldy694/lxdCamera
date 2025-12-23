@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/animator/fragment_fade_exit.xml",
+        "source": "com.lxd.camera.library.camera-library-fragment-1.3.6-43:/animator/fragment_fade_exit.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/animator/fragment_close_enter.xml",
+        "source": "com.lxd.camera.library.camera-library-fragment-1.3.6-43:/animator/fragment_close_enter.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/animator/fragment_open_enter.xml",
+        "source": "com.lxd.camera.library.camera-library-fragment-1.3.6-43:/animator/fragment_open_enter.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/animator/fragment_close_exit.xml",
+        "source": "com.lxd.camera.library.camera-library-fragment-1.3.6-43:/animator/fragment_close_exit.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/animator/fragment_fade_enter.xml",
+        "source": "com.lxd.camera.library.camera-library-fragment-1.3.6-43:/animator/fragment_fade_enter.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/animator/fragment_open_exit.xml",
+        "source": "com.lxd.camera.library.camera-library-fragment-1.3.6-43:/animator/fragment_open_exit.xml"
+    }
+]

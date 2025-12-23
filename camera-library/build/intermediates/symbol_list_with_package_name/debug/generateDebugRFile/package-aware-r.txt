@@ -1,0 +1,2 @@
+com.lxd.camera.library
+style Theme_LxdCamera

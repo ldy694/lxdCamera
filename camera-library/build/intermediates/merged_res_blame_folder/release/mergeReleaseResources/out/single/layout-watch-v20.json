@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/layout-watch-v20/abc_alert_dialog_button_bar_material.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/layout-watch-v20/abc_alert_dialog_button_bar_material.xml"
+    },
+    {
+        "merged": "com.lxd.camera.library.camera-library-release-49:/layout-watch-v20/abc_alert_dialog_title_material.xml",
+        "source": "com.lxd.camera.library.camera-library-appcompat-1.6.1-24:/layout-watch-v20/abc_alert_dialog_title_material.xml"
+    }
+]
