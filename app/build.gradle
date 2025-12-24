@@ -66,7 +66,7 @@ dependencies {
     implementation libs.androidx.material3
     implementation libs.coil.compose
 
-    implementation 'com.github.ldy694:lxdCamera:1.0'
+    implementation libs.lxdcamera
     // // 添加对camera-library模块的依赖
     // implementation project(':camera-library')
     

@@ -81,6 +81,12 @@ interface CameraCallback {
     fun onError(message: String, exception: Exception? = null)
 }
 
+// 简化的回调接口，用于 UTS 插件，避免类型导入问题
+interface SimpleCameraCallback {
+    fun onSuccess(uriString: String)
+    fun onError(errorMessage: String)
+}
+
 class CustomCameraActivity : ComponentActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private var mode = "photo"
@@ -103,6 +109,34 @@ class CustomCameraActivity : ComponentActivity() {
             intent.putExtra("mode", mode)
             intent.putExtra("videoDurationLimit", videoDurationLimit)
             activity.startActivity(intent)
+        }
+
+        // UTS 插件专用的启动方法，使用简化的回调接口
+        @JvmStatic
+        fun startCameraWithSimpleCallback(
+                activity: ComponentActivity,
+                mode: String = "photo",
+                callback: SimpleCameraCallback,
+                videoDurationLimit: Int = 60
+        ) {
+            // 将 SimpleCameraCallback 适配为 CameraCallback
+            val adaptedCallback =
+                    object : CameraCallback {
+                        override fun onSuccess(uri: Uri) {
+                            callback.onSuccess(uri.toString())
+                        }
+
+                        override fun onError(message: String, exception: Exception?) {
+                            val errorMsg =
+                                    if (exception != null) {
+                                        "$message: ${exception.message ?: exception.toString()}"
+                                    } else {
+                                        message
+                                    }
+                            callback.onError(errorMsg)
+                        }
+                    }
+            startCamera(activity, mode, adaptedCallback, videoDurationLimit)
         }
 
         // UTS插件需要的静态方法，用于获取回调
