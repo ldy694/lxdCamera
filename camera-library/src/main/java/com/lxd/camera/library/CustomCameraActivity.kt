@@ -90,8 +90,9 @@ interface CameraCallback {
     /**
      * 拍照或录像失败
      * @param message 错误信息
+     * @param exception 异常对象(可选)
      */
-    fun onError(message: String)
+    fun onError(message: String, exception: Exception? = null)
 }
 
 /**
@@ -118,12 +119,20 @@ class CustomCameraActivity : ComponentActivity() {
          * @param activity 当前 Activity
          * @param mode 拍摄模式: "photo" 或 "video"
          * @param callback 回调接口
+         * @param videoDurationLimit 录像时长限制(秒),默认60秒
          */
         @JvmStatic
-        fun startCamera(activity: ComponentActivity, mode: String, callback: CameraCallback) {
+        @JvmOverloads
+        fun startCamera(
+            activity: ComponentActivity,
+            mode: String,
+            callback: CameraCallback,
+            videoDurationLimit: Int = 60
+        ) {
             cameraCallback = callback
             val intent = Intent(activity, CustomCameraActivity::class.java)
             intent.putExtra("mode", mode)
+            intent.putExtra("videoDurationLimit", videoDurationLimit)
             activity.startActivity(intent)
         }
 
