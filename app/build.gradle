@@ -68,6 +68,7 @@ dependencies {
 
     // 使用本地依赖进行开发测试
     implementation project(':camera-library')
+//    implementation 'com.github.ldy694:lxdCamera:1.0.3'
 
     
     // // CameraX dependencies
