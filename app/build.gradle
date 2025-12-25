@@ -67,8 +67,8 @@ dependencies {
     implementation libs.coil.compose
 
     implementation libs.lxdcamera
-    // 使用本地依赖进行开发测试
-//    implementation project(':camera-library')
+    // // 添加对camera-library模块的依赖
+    // implementation project(':camera-library')
 
     
     // // CameraX dependencies

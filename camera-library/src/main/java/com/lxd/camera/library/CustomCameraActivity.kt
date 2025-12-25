@@ -44,7 +44,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,12 +60,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.google.common.util.concurrent.ListenableFuture
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -79,56 +75,43 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** 相机回调接口 - 优化版本 直接返回文件路径字符串,而非 Uri */
+// Camera callback interface for block-based callbacks
 interface CameraCallback {
-    /**
-     * 拍照或录像成功
-     * @param path 文件的绝对路径字符串
-     */
-    fun onSuccess(path: String)
-
-    /**
-     * 拍照或录像失败
-     * @param message 错误信息
-     */
-    fun onError(message: String)
+    fun onSuccess(uri: Uri)
+    fun onError(message: String, exception: Exception? = null)
 }
 
-/**
- * 自定义相机 Activity - 优化版本
- *
- * 主要改进:
- * 1. 简化 API: 只需传入 mode 参数
- * 2. 直接返回文件路径字符串
- * 3. 修复生命周期问题,正确处理录像时切出屏幕的场景
- * 4. 移除不必要的复杂参数
- */
 class CustomCameraActivity : ComponentActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private var mode = "photo"
-    private val videoDurationLimit = 60 // 固定60秒,可根据需要调整
+    private var videoDurationLimit = 60 // 默认60秒
 
     // 静态变量用于存储回调
     companion object {
-        private const val TAG = "CustomCamera"
         private var cameraCallback: CameraCallback? = null
 
-        /**
-         * 启动相机 - 简化版本
-         * @param activity 当前 Activity
-         * @param mode 拍摄模式: "photo" 或 "video"
-         * @param callback 回调接口
-         */
+        // 静态方法，用于从外部启动相机并设置回调
         @JvmStatic
-        fun startCamera(activity: ComponentActivity, mode: String, callback: CameraCallback) {
+        fun startCamera(
+                activity: ComponentActivity,
+                mode: String = "photo",
+                callback: CameraCallback,
+                videoDurationLimit: Int = 60
+        ) {
             cameraCallback = callback
             val intent = Intent(activity, CustomCameraActivity::class.java)
             intent.putExtra("mode", mode)
+            intent.putExtra("videoDurationLimit", videoDurationLimit)
             activity.startActivity(intent)
         }
 
-        @JvmStatic fun getCameraCallback(): CameraCallback? = cameraCallback
+        // UTS插件需要的静态方法，用于获取回调
+        @JvmStatic
+        fun getCameraCallback(): CameraCallback? {
+            return cameraCallback
+        }
 
+        // UTS插件需要的静态方法，用于清除回调
         @JvmStatic
         fun clearCameraCallback() {
             cameraCallback = null
@@ -140,26 +123,22 @@ class CustomCameraActivity : ComponentActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // 从Intent获取拍摄模式参数
-        mode = intent.getStringExtra("mode") ?: "photo"
+        mode = intent.getStringExtra("mode") ?: "photo" // "photo" or "video"
+        // 从Intent获取录像时长限制参数
+        videoDurationLimit = intent.getIntExtra("videoDurationLimit", 60) // 默认60秒
 
         setContent {
             MaterialTheme {
                 CustomCameraScreen(
                         onSuccess = { uri ->
-                            Log.i(TAG, "拍摄成功,URI: $uri")
-                            // 将 Uri 转换为文件路径
-                            val path = getRealPathFromUri(uri)
-                            if (path != null) {
-                                cameraCallback?.onSuccess(path)
-                            } else {
-                                cameraCallback?.onError("无法获取文件路径")
-                            }
+                            Log.i("CustomCamera", "onSuccess called with URI: $uri")
+                            cameraCallback?.onSuccess(uri)
                             clearCameraCallback()
                             finish()
                         },
-                        onError = { message ->
-                            Log.e(TAG, "拍摄失败: $message")
-                            cameraCallback?.onError(message)
+                        onError = { message, exception ->
+                            Log.e("CustomCamera", "onError called: $message", exception)
+                            cameraCallback?.onError(message, exception)
                             clearCameraCallback()
                             finish()
                         },
@@ -173,31 +152,19 @@ class CustomCameraActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+        // 防止内存泄漏
         clearCameraCallback()
-    }
-
-    /** 从 Uri 获取真实文件路径 */
-    private fun getRealPathFromUri(uri: Uri): String? {
-        return try {
-            // 对于 MediaStore Uri,直接返回 Uri 的字符串形式
-            // Android Q+ 使用 MediaStore,路径格式为 content://...
-            uri.toString()
-        } catch (e: Exception) {
-            Log.e(TAG, "获取文件路径失败", e)
-            null
-        }
     }
 }
 
 @Composable
 fun CustomCameraScreen(
         onSuccess: (Uri) -> Unit,
-        onError: (String) -> Unit,
+        onError: (String, Exception?) -> Unit,
         mode: String,
         videoDurationLimit: Int
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
@@ -213,42 +180,11 @@ fun CustomCameraScreen(
 
     // Recording state
     var isRecording by remember { mutableStateOf(false) }
-    var recordingDuration by remember { mutableStateOf(0L) }
-    var remainingTime by remember { mutableStateOf(videoDurationLimit.toLong()) }
+    var recordingDuration by remember { mutableStateOf(0L) } // in seconds
+    var remainingTime by remember { mutableStateOf(videoDurationLimit.toLong()) } // 剩余录制时间（秒）
     var recording by remember { mutableStateOf<Recording?>(null) }
-    var videoUri by remember { mutableStateOf<Uri?>(null) }
-    var countdownScope by remember { mutableStateOf<CoroutineScope?>(null) }
-
-    // 生命周期监听,处理录像时切出屏幕的场景
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_PAUSE -> {
-                    // 切出屏幕时,如果正在录像则自动停止
-                    if (isRecording && recording != null) {
-                        Log.i("CustomCamera", "检测到切出屏幕,自动停止录像")
-                        recording?.stop()
-                        countdownScope?.cancel()
-                        countdownScope = null
-                    }
-                }
-                Lifecycle.Event.ON_STOP -> {
-                    // 确保清理资源
-                    countdownScope?.cancel()
-                    countdownScope = null
-                }
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            // 清理所有资源
-            countdownScope?.cancel()
-            recording?.stop()
-        }
-    }
+    var videoUri by remember { mutableStateOf<Uri?>(null) } // 保存视频URI
+    var countdownScope by remember { mutableStateOf<CoroutineScope?>(null) } // 倒计时协程作用域
 
     // 设置相机控制（对焦、缩放）
     fun setupCameraControls(cameraInstance: Camera?) {
@@ -357,15 +293,14 @@ fun CustomCameraScreen(
                     }
             )
 
-    /** 拍照函数 - 优化版本 */
     fun takePhoto() {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val imageFileName = "IMG_${timeStamp}"
+        val imageFileName = "JPEG_${timeStamp}_"
         val contentValues =
                 ContentValues().apply {
                     put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName)
                     put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Camera")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/")
                 }
 
         val outputFileOptions =
@@ -383,78 +318,53 @@ fun CustomCameraScreen(
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         val savedUri = outputFileResults.savedUri
                         if (savedUri != null) {
-                            Log.i("CustomCamera", "拍照成功: $savedUri")
                             onSuccess(savedUri)
                         } else {
-                            val errorMsg = "保存失败: URI为空"
-                            Log.e("CustomCamera", errorMsg)
-                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                            onError(errorMsg)
+                            Log.e("CustomCamera", "Saved URI is null")
+                            onError("保存失败: URI为空", null)
                         }
                     }
 
                     override fun onError(exception: ImageCaptureException) {
-                        val errorMsg = "拍照失败: ${exception.message ?: "未知错误"}"
-                        Log.e("CustomCamera", errorMsg, exception)
-                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                        onError(errorMsg)
+                        Log.e(
+                                "CustomCamera",
+                                "Photo capture failed: ${exception.message}",
+                                exception
+                        )
+                        val errorMessage = "拍照失败: ${exception.message}"
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        onError(errorMessage, exception)
                     }
                 }
         )
     }
 
-    /** 处理录像完成 - 统一处理逻辑 */
-    fun handleRecordingComplete() {
-        isRecording = false
-        recording = null
-        recordingDuration = 0L
-        remainingTime = videoDurationLimit.toLong()
-
-        // 取消倒计时协程
-        countdownScope?.cancel()
-        countdownScope = null
-
-        Log.i("CustomCamera", "录像保存: $videoUri")
-
-        // 返回结果
-        val uri = videoUri
-        if (uri != null) {
-            onSuccess(uri)
-        } else {
-            val errorMsg = "录像保存失败:URI为空"
-            Log.e("CustomCamera", errorMsg)
-            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-            onError(errorMsg)
-        }
-    }
-
-    /** 开始录像 - 优化版本 */
     fun startRecording() {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val videoFileName = "VID_${timeStamp}"
+        val videoFileName = "VID_${timeStamp}_"
         val contentValues =
                 ContentValues().apply {
                     put(MediaStore.Video.Media.DISPLAY_NAME, videoFileName)
                     put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
-                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Camera")
+                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/")
                 }
 
-        // 先插入到MediaStore获取URI
+        // 先插入内容到MediaStore获取URI
         videoUri =
                 context.contentResolver.insert(
                         MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                         contentValues
                 )
 
-        if (videoUri == null) {
-            val errorMsg = "无法创建视频文件"
-            Log.e("CustomCamera", errorMsg)
-            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+        if (videoUri != null) {
+            Log.i("CustomCamera", "Pre-created video URI: $videoUri")
+        } else {
+            Log.e("CustomCamera", "Failed to pre-create video URI")
+            Toast.makeText(context, "无法创建视频文件", Toast.LENGTH_SHORT).show()
             return
         }
 
-        Log.i("CustomCamera", "创建视频文件成功: $videoUri")
-
+        // 创建MediaStoreOutputOptions，使用预创建的URI
         val outputOptions =
                 MediaStoreOutputOptions.Builder(
                                 context.contentResolver,
@@ -469,12 +379,16 @@ fun CustomCameraScreen(
 
         recording =
                 recordingSession.start(ContextCompat.getMainExecutor(context)) { event ->
+                    // 使用更可靠的类型检查方式处理录制事件
                     when (event) {
                         is VideoRecordEvent.Start -> {
                             isRecording = true
                             recordingDuration = 0L
                             remainingTime = videoDurationLimit.toLong()
-                            Log.i("CustomCamera", "开始录像,时长限制: ${videoDurationLimit}秒")
+                            Log.i(
+                                    "CustomCamera",
+                                    "Video recording started, duration limit: $videoDurationLimit seconds"
+                            )
 
                             // 启动倒计时协程
                             countdownScope = CoroutineScope(Dispatchers.Main)
@@ -485,36 +399,108 @@ fun CustomCameraScreen(
                                     recordingDuration++
 
                                     if (remainingTime <= 0) {
-                                        // 时间到,自动停止
-                                        Log.i("CustomCamera", "录像时长达到限制,自动停止")
-                                        handleRecordingComplete()
+                                        // 时间到，自动停止录制
+                                        Log.i(
+                                                "CustomCamera",
+                                                "Video recording duration limit reached, stopping recording"
+                                        )
+                                        recording?.stop()
+                                        // 直接在这里处理录制结束逻辑
+                                        isRecording = false
+                                        recording = null
+                                        recordingDuration = 0L // 重置录制时间
+                                        remainingTime = videoDurationLimit.toLong() // 重置剩余时间
+
+                                        // 取消倒计时协程
+                                        countdownScope?.cancel()
+                                        countdownScope = null
+
+                                        Log.i("CustomCamera", "Recording stopped due to time limit")
+                                        Log.i("CustomCamera", "Video saved at: $videoUri")
+
+                                        // 确保videoUri不为null
+                                        if (videoUri != null) {
+                                            Log.i(
+                                                    "CustomCamera",
+                                                    "Calling onSuccess with URI: $videoUri"
+                                            )
+                                            onSuccess(videoUri!!)
+                                        } else {
+                                            Log.e("CustomCamera", "Failed to get video URI")
+                                            val errorMessage = "录像保存失败"
+                                            Toast.makeText(
+                                                            context,
+                                                            errorMessage,
+                                                            Toast.LENGTH_SHORT
+                                                    )
+                                                    .show()
+                                            onError(errorMessage, null)
+                                        }
                                     }
                                 }
                             }
                         }
                         is VideoRecordEvent.Finalize -> {
-                            Log.i("CustomCamera", "录像完成事件")
-                            if (event.hasError()) {
-                                val errorMsg = "录像失败: ${event.error}"
-                                Log.e("CustomCamera", errorMsg)
-                                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                                onError(errorMsg)
-                            }
+                            Log.i("CustomCamera", "Finalize event received!")
+                            // 只记录事件，不再处理完成逻辑（已在stopRecording中处理）
+                            Log.i("CustomCamera", "Video recording completed successfully")
+                            Log.i("CustomCamera", "Video saved at: $videoUri")
                         }
                         else -> {
-                            Log.d("CustomCamera", "录像事件: ${event.javaClass.simpleName}")
+                            Log.d(
+                                    "CustomCamera",
+                                    "Video recording event: ${event.javaClass.simpleName}"
+                            )
+                            // 添加更多调试信息
+                            Log.d("CustomCamera", "Event class: ${event.javaClass.name}")
+                            Log.d("CustomCamera", "Event toString: $event")
+                            // 检查是否是错误事件
+                            if (event.javaClass.simpleName.contains("Error", ignoreCase = true) ||
+                                            event.javaClass.simpleName.contains(
+                                                    "Failure",
+                                                    ignoreCase = true
+                                            )
+                            ) {
+                                isRecording = false
+                                recording = null
+                                // 取消倒计时协程
+                                countdownScope?.cancel()
+                                countdownScope = null
+                                val errorMessage = "录像失败: ${event.javaClass.simpleName}"
+                                Log.e("CustomCamera", errorMessage)
+                                Toast.makeText(context, "录像失败", Toast.LENGTH_SHORT).show()
+                                onError(errorMessage, null)
+                            }
                         }
                     }
                 }
     }
 
-    /** 停止录像 - 优化版本 */
     fun stopRecording() {
-        if (!isRecording) return
-
-        Log.i("CustomCamera", "手动停止录像")
         recording?.stop()
-        handleRecordingComplete()
+        // 直接在这里处理录制结束逻辑，不再依赖Finalize事件
+        isRecording = false
+        recording = null
+        recordingDuration = 0L // 重置录制时间
+        remainingTime = videoDurationLimit.toLong() // 重置剩余时间
+
+        // 取消倒计时协程
+        countdownScope?.cancel()
+        countdownScope = null
+
+        Log.i("CustomCamera", "Recording stopped directly in stopRecording()")
+        Log.i("CustomCamera", "Video saved at: $videoUri")
+
+        // 确保videoUri不为null
+        if (videoUri != null) {
+            Log.i("CustomCamera", "Calling onSuccess with URI: $videoUri")
+            onSuccess(videoUri!!)
+        } else {
+            Log.e("CustomCamera", "Failed to get video URI")
+            val errorMessage = "录像保存失败"
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            onError(errorMessage, null)
+        }
     }
 
     // 处理缩放和自动对焦功能 - 已被setupCameraControls替代，保留此函数以保持兼容性
