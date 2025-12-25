@@ -66,8 +66,9 @@ dependencies {
     implementation libs.androidx.material3
     implementation libs.coil.compose
 
+    implementation libs.lxdcamera
     // 使用本地依赖进行开发测试
-    implementation project(':camera-library')
+//    implementation project(':camera-library')
 
     
     // // CameraX dependencies
