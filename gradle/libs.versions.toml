@@ -10,7 +10,7 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.12.2"
 composeBom = "2025.12.01"
-lxdcamera = "1.0.3"
+lxdcamera = "1.0.4"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
