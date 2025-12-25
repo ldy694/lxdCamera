@@ -69,6 +69,7 @@ dependencies {
     implementation libs.lxdcamera
     // // 添加对camera-library模块的依赖
     // implementation project(':camera-library')
+
     
     // // CameraX dependencies
     // implementation libs.androidx.camera.core
